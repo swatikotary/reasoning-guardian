@@ -1,0 +1,5 @@
+node_modules/
+.env
+memory/decisions.db
+sqlite3.exe
+test-groq.ts

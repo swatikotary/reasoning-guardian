@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  reasoning-guardian:
+    build: .
+    container_name: reasoning-guardian
+    ports:
+      - "3001:3001"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+    volumes:
+      - ./memory:/app/memory
+    restart: unless-stopped

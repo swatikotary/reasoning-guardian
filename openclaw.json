@@ -1,0 +1,10 @@
+﻿{
+  "skills": {
+    "load": {
+      "extraDirs": ["./skills"]
+    }
+  },
+  "memory": {
+    "backend": "builtin"
+  }
+}

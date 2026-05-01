@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reasoning Guardian</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #0a0a14;
+  color: #e0e0e0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── HEADER ── */
+header {
+  background: #0f0f1e;
+  border-bottom: 1px solid #1e1e35;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, #667eea, #1abc9c);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.logo-text { font-size: 1.1em; font-weight: 700; color: #fff; }
+.logo-sub { font-size: 0.72em; color: #555; margin-top: 1px; }
+
+.header-stats {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+}
+.stat-item { text-align: center; }
+.stat-value { font-size: 1.4em; font-weight: 700; color: #667eea; line-height: 1; }
+.stat-label { font-size: 0.68em; color: #555; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+.stat-item.conflicts .stat-value { color: #e74c3c; }
+.stat-item.protected .stat-value { color: #1abc9c; }
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.active-project-badge {
+  background: #1e1e35;
+  border: 1px solid #2a2a50;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 0.8em;
+  color: #667eea;
+  font-weight: 600;
+}
+
+.btn {
+  padding: 7px 14px;
+  border-radius: 7px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.82em;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.btn-ghost { background: transparent; color: #888; border: 1px solid #2a2a40; }
+.btn-ghost:hover { color: #fff; border-color: #667eea; }
+.btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+.btn-primary:hover { opacity: 0.85; }
+.btn-danger { background: #e74c3c; color: white; }
+.btn-success { background: #27ae60; color: white; }
+.btn-teal { background: #1abc9c; color: #0a0a14; font-weight: 700; }
+
+/* ── MAIN LAYOUT ── */
+.main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── PROJECT SIDEBAR ── */
+.project-sidebar {
+  width: 180px;
+  min-width: 180px;
+  background: #080810;
+  border-right: 1px solid #1a1a2e;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sidebar-header {
+  padding: 14px 12px 10px;
+  font-size: 0.68em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #444;
+  border-bottom: 1px solid #1a1a2e;
+  flex-shrink: 0;
+}
+
+.project-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.project-card {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+  position: relative;
+  margin: 2px 0;
+}
+.project-card:hover { background: #0f0f1e; }
+.project-card.active {
+  border-left-color: #1abc9c;
+  background: #0d1a15;
+}
+
+.project-name {
+  font-size: 0.82em;
+  font-weight: 600;
+  color: #ccc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+.project-card.active .project-name { color: #1abc9c; }
+
+.project-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.project-count {
+  font-size: 0.7em;
+  color: #555;
+}
+.project-conflict-dot {
+  width: 6px; height: 6px;
+  background: #e74c3c;
+  border-radius: 50%;
+  display: none;
+}
+.project-conflict-dot.visible { display: block; }
+
+.project-card.active::after {
+  content: "";
+  position: absolute;
+  right: 10px; top: 50%;
+  transform: translateY(-50%);
+  width: 6px; height: 6px;
+  background: #1abc9c;
+  border-radius: 50%;
+}
+
+.sidebar-footer {
+  padding: 10px 12px;
+  border-top: 1px solid #1a1a2e;
+  flex-shrink: 0;
+}
+
+.new-project-btn {
+  width: 100%;
+  padding: 8px;
+  background: #13131f;
+  border: 1px dashed #2a2a40;
+  border-radius: 7px;
+  color: #555;
+  font-size: 0.78em;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.new-project-btn:hover { border-color: #667eea; color: #667eea; background: #0f0f1e; }
+
+/* ── DASHBOARD PANEL ── */
+.dashboard-panel {
+  width: 0;
+  min-width: 0;
+  background: #0d0d1a;
+  border-right: 1px solid #1e1e35;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+.dashboard-panel.open { width: 380px; min-width: 380px; }
+
+.panel-header {
+  padding: 12px 16px;
+  background: #0f0f1e;
+  border-bottom: 1px solid #1e1e35;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.panel-title { font-size: 0.85em; font-weight: 600; color: #667eea; }
+.panel-close { background: none; border: none; cursor: pointer; color: #555; font-size: 1.1em; }
+.panel-close:hover { color: #fff; }
+
+.panel-tabs {
+  display: flex;
+  border-bottom: 1px solid #1e1e35;
+  flex-shrink: 0;
+}
+.tab {
+  flex: 1; padding: 9px;
+  text-align: center;
+  font-size: 0.76em;
+  font-weight: 600;
+  color: #555;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+.tab.active { color: #667eea; border-bottom-color: #667eea; }
+.tab:hover { color: #aaa; }
+
+.panel-content { flex: 1; overflow-y: auto; padding: 12px; }
+
+/* ── DECISION CARDS ── */
+.decision-card {
+  background: #13131f;
+  border-radius: 9px;
+  padding: 12px;
+  margin-bottom: 9px;
+  border-left: 3px solid #667eea;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.decision-card:hover { background: #1a1a2e; transform: translateX(2px); }
+.card-slot {
+  display: inline-block;
+  background: #1e1e35;
+  color: #667eea;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.68em;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.card-decision { font-weight: 600; font-size: 0.88em; color: #fff; margin-bottom: 4px; }
+.card-meta { font-size: 0.73em; color: #666; line-height: 1.5; }
+.card-meta span { color: #888; }
+.confidence-bar { background: #1e1e35; height: 3px; border-radius: 2px; margin-top: 7px; overflow: hidden; }
+.confidence-fill { height: 100%; background: linear-gradient(90deg, #667eea, #1abc9c); }
+
+/* ── TIMELINE ── */
+.timeline-title { font-size: 0.78em; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+.timeline { position: relative; padding-left: 20px; }
+.timeline::before { content: ""; position: absolute; left: 6px; top: 8px; bottom: 8px; width: 2px; background: #1e1e35; }
+.timeline-event { position: relative; margin-bottom: 16px; }
+.timeline-dot { position: absolute; left: -20px; top: 4px; width: 11px; height: 11px; border-radius: 50%; background: #667eea; border: 2px solid #0a0a14; }
+.timeline-dot.intercepted { background: #e74c3c; }
+.timeline-dot.reconfirmed { background: #1abc9c; }
+.timeline-dot.overridden { background: #555; }
+.timeline-date { font-size: 0.68em; color: #444; margin-bottom: 2px; }
+.timeline-action { font-size: 0.8em; font-weight: 600; color: #ccc; }
+.timeline-action.intercepted { color: #e74c3c; }
+.timeline-action.reconfirmed { color: #1abc9c; }
+.timeline-action.overridden { color: #888; }
+.timeline-detail { font-size: 0.73em; color: #555; margin-top: 2px; line-height: 1.4; }
+
+/* ── CONFLICT ITEMS ── */
+.conflict-item {
+  background: #160808;
+  border: 1px solid #3a1a1a;
+  border-radius: 8px;
+  padding: 11px;
+  margin-bottom: 9px;
+}
+
+/* ── CHAT AREA ── */
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.chat-container.panel-open { margin-left: 380px; }
+
+.chat-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chat-msg {
+  max-width: 78%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.87em;
+  line-height: 1.55;
+  animation: msgIn 0.25s ease;
+}
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.chat-msg.user {
+  background: #1e2a4a; color: white;
+  align-self: flex-end; border-bottom-right-radius: 3px;
+  border: 1px solid #2a3a5a;
+}
+.chat-msg.guardian {
+  background: #13131f; color: #e0e0e0;
+  align-self: flex-start; border-bottom-left-radius: 3px;
+  border: 1px solid #1e1e35;
+}
+.chat-msg.decision-captured {
+  background: #0d1a0d; border: 1px solid #1a3a1a;
+  align-self: flex-start; border-bottom-left-radius: 3px; max-width: 85%;
+}
+
+/* ── INTERCEPTION ALERT ── */
+.interception-alert {
+  align-self: stretch; max-width: 100%;
+  animation: interceptIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes interceptIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.alert-inner {
+  background: #160808;
+  border: 1px solid #5a1a1a;
+  border-left: 4px solid #e74c3c;
+  border-radius: 10px;
+  padding: 15px;
+  position: relative; overflow: hidden;
+}
+.alert-inner::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, #e74c3c, transparent);
+  animation: scanLine 1.5s ease-out forwards;
+}
+@keyframes scanLine {
+  from { transform: scaleX(0); transform-origin: left; }
+  to { transform: scaleX(1); transform-origin: left; }
+}
+.alert-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+}
+.shield-icon {
+  width: 30px; height: 30px; background: #e74c3c;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 15px; animation: shieldPulse 0.6s ease; flex-shrink: 0;
+}
+@keyframes shieldPulse {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.alert-title-text { font-weight: 700; color: #e74c3c; font-size: 0.92em; }
+.alert-severity {
+  font-size: 0.65em; background: #e74c3c22; color: #e74c3c;
+  padding: 2px 7px; border-radius: 10px; font-weight: 700;
+  text-transform: uppercase; margin-left: auto;
+}
+.alert-decisions {
+  display: grid; grid-template-columns: 1fr auto 1fr;
+  gap: 8px; align-items: center; margin-bottom: 10px;
+}
+.alert-decision-box { background: #1a1a2e; border-radius: 7px; padding: 9px; }
+.alert-decision-box.past { border: 1px solid #2a3a5a; }
+.alert-decision-box.proposed { border: 1px solid #5a2a2a; }
+.alert-decision-label { font-size: 0.63em; text-transform: uppercase; color: #555; font-weight: 700; margin-bottom: 3px; }
+.alert-decision-text { font-size: 0.8em; color: #ccc; font-weight: 600; }
+.alert-vs { font-size: 1em; color: #e74c3c; font-weight: 700; text-align: center; }
+.alert-reason {
+  font-size: 0.78em; color: #aaa; background: #1a1a1a;
+  border-radius: 6px; padding: 7px 9px; margin-bottom: 10px; line-height: 1.5;
+}
+.alert-actions { display: flex; gap: 8px; }
+
+/* ── SHIELD PROCESSING ── */
+.shield-processing {
+  display: flex; align-items: center; gap: 10px;
+  align-self: flex-start; padding: 9px 13px;
+  background: #13131f; border: 1px solid #1e1e35;
+  border-radius: 10px; font-size: 0.83em; color: #667eea;
+  animation: msgIn 0.25s ease;
+}
+.shield-spin {
+  width: 18px; height: 18px;
+  border: 2px solid #1e1e35; border-top-color: #667eea;
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── INPUT ── */
+.chat-input-area {
+  padding: 14px 20px;
+  background: #0d0d1a; border-top: 1px solid #1e1e35;
+  display: flex; gap: 10px; align-items: flex-end; flex-shrink: 0;
+}
+.chat-input-area textarea {
+  flex: 1; background: #13131f; border: 1px solid #2a2a40;
+  border-radius: 10px; color: #e0e0e0; padding: 11px 13px;
+  font-size: 0.87em; resize: none; height: 54px;
+  font-family: inherit; transition: border-color 0.2s;
+}
+.chat-input-area textarea:focus { outline: none; border-color: #667eea; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7); z-index: 200;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: #13131f; border: 1px solid #2a2a40;
+  border-radius: 12px; padding: 22px; width: 460px; max-width: 90vw;
+}
+.modal-title { font-size: 1em; font-weight: 700; color: #fff; margin-bottom: 5px; }
+.modal-sub { font-size: 0.8em; color: #666; margin-bottom: 14px; }
+.modal input, .modal textarea {
+  width: 100%; background: #0f0f1e; border: 1px solid #2a2a40;
+  border-radius: 8px; color: #e0e0e0; padding: 10px 12px;
+  font-size: 0.85em; font-family: inherit; margin-bottom: 12px;
+}
+.modal input { height: 40px; }
+.modal textarea { resize: none; height: 130px; }
+.modal input:focus, .modal textarea:focus { outline: none; border-color: #667eea; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* ── EMPTY ── */
+.empty-state { text-align: center; color: #333; padding: 36px 16px; font-size: 0.82em; line-height: 1.8; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2a2a40; border-radius: 3px; }
+
+/* ── NEW PROJECT MODAL ── */
+#newProjectModal .modal-sub { margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🛡️</div>
+    <div>
+      <div class="logo-text">Reasoning Guardian</div>
+      <div class="logo-sub">Decision Intelligence Layer</div>
+    </div>
+  </div>
+
+  <div class="header-stats">
+    <div class="stat-item">
+      <div class="stat-value" id="statDecisions">0</div>
+      <div class="stat-label">Decisions Protected</div>
+    </div>
+    <div class="stat-item conflicts">
+      <div class="stat-value" id="statConflicts">0</div>
+      <div class="stat-label">Contradictions Caught</div>
+    </div>
+    <div class="stat-item protected">
+      <div class="stat-value" id="statConfidence">—</div>
+      <div class="stat-label">Avg Confidence</div>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <div class="active-project-badge" id="activeProjectBadge">📁 Default</div>
+    <button class="btn btn-ghost" onclick="openImport()">⬆ Import</button>
+    <button class="btn btn-teal" onclick="toggleDashboard()" id="dashBtn">📋 Decision Graph</button>
+  </div>
+</header>
+
+<!-- IMPORT MODAL -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal">
+    <div class="modal-title">Import Chat History</div>
+    <div class="modal-sub">Paste any engineering chat — Guardian extracts all decisions automatically.</div>
+    <textarea id="importText" placeholder="Paste chat history here..."></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeImport()">Cancel</button>
+      <button class="btn btn-primary" onclick="runImport()">Extract Decisions</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW PROJECT MODAL -->
+<div class="modal-overlay" id="newProjectModal">
+  <div class="modal">
+    <div class="modal-title">New Project</div>
+    <div class="modal-sub">Each project has its own isolated decision graph. No cross-project conflicts.</div>
+    <input id="newProjectName" placeholder="Project name e.g. Auth Service, Mobile App..." />
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeNewProject()">Cancel</button>
+      <button class="btn btn-primary" onclick="createProject()">Create Project</button>
+    </div>
+  </div>
+</div>
+<!-- TEAM MODAL -->
+<div class="modal-overlay" id="teamModal">
+  <div class="modal">
+    <div class="modal-title">👥 Team Members</div>
+    <div class="modal-sub" id="teamModalProjectName"></div>
+    <div id="teamMembersList" style="margin-bottom:12px"></div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <input id="newMemberName" placeholder="Add member name..." style="margin-bottom:0;flex:1" 
+        onkeydown="if(event.key==='Enter') addMember()"/>
+      <button class="btn btn-primary" onclick="addMember()">Add</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeTeamModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- OVERRIDE REASON MODAL -->
+<div class="modal-overlay" id="overrideModal">
+  <div class="modal">
+    <div class="modal-title">⚠️ Override Decision</div>
+    <div class="modal-sub">Both fields are required. This will be recorded in the decision timeline.</div>
+    <select id="overrideEngineer" style="width:100%;background:#0f0f1e;border:1px solid #2a2a40;border-radius:8px;color:#e0e0e0;padding:10px 12px;font-size:0.85em;margin-bottom:12px;height:40px">
+      <option value="">Select who is overriding...</option>
+    </select>
+    <input id="overrideReason" placeholder="Why are you overriding this decision?" />
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeOverrideModal()">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmOverride()">Confirm Override</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- PROJECT SIDEBAR -->
+  <div class="project-sidebar">
+    <div class="sidebar-header">Projects</div>
+    <div class="project-list" id="projectList"></div>
+    <div class="sidebar-footer">
+        <button class="new-project-btn" onclick="openTeamModal()" style="margin-bottom:6px">👥 Manage Team</button>
+        <button class="new-project-btn" onclick="openNewProject()">+ New Project</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD PANEL -->
+  <div class="dashboard-panel" id="dashPanel">
+    <div class="panel-header">
+      <div class="panel-title">📋 Decision Graph</div>
+      <button class="panel-close" onclick="toggleDashboard()">✕</button>
+    </div>
+    <div class="panel-tabs">
+      <div class="tab active" onclick="switchTab('decisions',this)">Active</div>
+      <div class="tab" onclick="switchTab('timeline',this)">Timeline</div>
+      <div class="tab" onclick="switchTab('conflicts',this)">Conflicts</div>
+    </div>
+    <div class="panel-content" id="tab-decisions">
+      <div class="empty-state" id="decisionsEmpty">No decisions yet for this project.</div>
+      <div id="decisionsList"></div>
+    </div>
+    <div class="panel-content" id="tab-timeline" style="display:none">
+      <div class="timeline-title">Decision Evolution</div>
+      <div id="timelineList"><div class="empty-state">No timeline data yet.</div></div>
+    </div>
+    <div class="panel-content" id="tab-conflicts" style="display:none">
+      <div class="empty-state" id="conflictsEmpty">No conflicts detected.</div>
+      <div id="conflictsList"></div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="chat-container" id="chatContainer">
+    <div class="chat-area" id="chatArea">
+      <div class="chat-msg guardian">
+        👋 I'm <strong>Reasoning Guardian</strong>. Select a project on the left, then type any engineering decision. I'll monitor it in real time — intercepting contradictions before they cause damage.
+      </div>
+    </div>
+    <div class="chat-input-area">
+      <textarea id="chatInput"
+        placeholder="Type an engineering decision or ask a question... (Enter to send)"
+        onkeydown="handleKey(event)"></textarea>
+      <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "http://localhost:3001/api";
+
+// ── STATE ─────────────────────────────────────────────────
+let dashOpen = false;
+let activeTab = "decisions";
+let allDecisions = [];
+let allConflicts = [];
+let currentProject = "default";
+let projects = JSON.parse(localStorage.getItem("rg_projects") || "[]");
+
+// Ensure default project exists
+if (!projects.find(p => p.id === "default")) {
+  projects.unshift({ id: "default", name: "Default Project", created: new Date().toISOString() });
+  saveProjects();
+}
+
+function saveProjects() {
+  localStorage.setItem("rg_projects", JSON.stringify(projects));
+}
+
+// ── TEAM MANAGEMENT ──────────────────────────────────────
+
+function getTeamMembers(projectId) {
+  const project = projects.find(p => p.id === projectId);
+  return project?.members || ["Harsh"];
+}
+
+function openTeamModal() {
+  const project = projects.find(p => p.id === currentProject);
+  document.getElementById("teamModalProjectName").textContent = `Project: ${project.name}`;
+  renderTeamMembers();
+  document.getElementById("teamModal").classList.add("open");
+}
+
+function closeTeamModal() {
+  document.getElementById("teamModal").classList.remove("open");
+  document.getElementById("newMemberName").value = "";
+}
+
+function renderTeamMembers() {
+  const members = getTeamMembers(currentProject);
+  document.getElementById("teamMembersList").innerHTML = members.map((m, i) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:#0f0f1e;border-radius:7px;margin-bottom:6px">
+      <span style="font-size:0.85em;color:#ccc">👤 ${m}</span>
+      ${members.length > 1 ? `<button class="btn btn-ghost" style="padding:3px 8px;font-size:0.72em" onclick="removeMember(${i})">Remove</button>` : ""}
+    </div>
+  `).join("");
+}
+
+function addMember() {
+  const name = document.getElementById("newMemberName").value.trim();
+  if (!name) return;
+  const project = projects.find(p => p.id === currentProject);
+  if (!project.members) project.members = ["Harsh"];
+  if (project.members.includes(name)) return;
+  project.members.push(name);
+  saveProjects();
+  document.getElementById("newMemberName").value = "";
+  renderTeamMembers();
+}
+
+function removeMember(index) {
+  const project = projects.find(p => p.id === currentProject);
+  if (!project.members) return;
+  project.members.splice(index, 1);
+  saveProjects();
+  renderTeamMembers();
+}
+
+// ── OVERRIDE MODAL ────────────────────────────────────────
+
+let pendingOverride = null;
+
+function openOverrideModal(conflictId, btn) {
+  pendingOverride = { conflictId, btn };
+  const members = getTeamMembers(currentProject);
+  const select = document.getElementById("overrideEngineer");
+  select.innerHTML = `<option value="">Select who is overriding...</option>` +
+    members.map(m => `<option value="${m}">${m}</option>`).join("");
+  document.getElementById("overrideReason").value = "";
+  document.getElementById("overrideModal").classList.add("open");
+}
+
+function closeOverrideModal() {
+  document.getElementById("overrideModal").classList.remove("open");
+  pendingOverride = null;
+}
+
+async function confirmOverride() {
+  const engineer = document.getElementById("overrideEngineer").value;
+  const reason = document.getElementById("overrideReason").value.trim();
+
+  if (!engineer) {
+    alert("Please select who is overriding.");
+    return;
+  }
+  if (!reason) {
+    alert("Please provide a reason for the override.");
+    return;
+  }
+
+  closeOverrideModal();
+
+  const { conflictId, btn } = pendingOverride;
+  btn.parentElement.querySelectorAll("button").forEach(b => b.disabled = true);
+
+  try {
+    await fetch(`${API}/resolve`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "override", conflictId, engineer, reason }),
+    });
+    addMsg("guardian", `✅ Decision overridden by ${engineer}. Reason: ${reason}`);
+    refreshDashboard();
+  } catch {
+    addMsg("guardian", "Error resolving conflict.");
+  }
+}
+// ── PROJECT MANAGEMENT ────────────────────────────────────
+
+function renderProjectList() {
+  const list = document.getElementById("projectList");
+  list.innerHTML = projects.map(p => {
+    const isActive = p.id === currentProject;
+    const projectDecisions = allDecisions.filter(d => (d.project || "default") === p.id);
+    const projectConflicts = allConflicts.filter(c => (c.project || "default") === p.id);
+    const hasConflict = projectConflicts.length > 0;
+    return `
+      <div class="project-card ${isActive ? "active" : ""}" onclick="switchProject('${p.id}')">
+        <div class="project-name">${p.name}</div>
+        <div class="project-meta">
+          <span class="project-count">${projectDecisions.filter(d=>d.status==="active").length} decisions</span>
+          <div class="project-conflict-dot ${hasConflict ? "visible" : ""}"></div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function switchProject(projectId) {
+  currentProject = projectId;
+  const project = projects.find(p => p.id === projectId);
+  document.getElementById("activeProjectBadge").textContent = `📁 ${project.name}`;
+
+  const chatArea = document.getElementById("chatArea");
+  chatArea.innerHTML = `<div class="chat-msg guardian">
+    📁 Switched to <strong>${project.name}</strong>. All decisions and contradiction detection are now scoped to this project.
+  </div>`;
+
+  renderProjectList();
+  await refreshDashboard();
+}
+
+function openNewProject() {
+  document.getElementById("newProjectModal").classList.add("open");
+  document.getElementById("newProjectName").focus();
+}
+function closeNewProject() {
+  document.getElementById("newProjectModal").classList.remove("open");
+  document.getElementById("newProjectName").value = "";
+}
+
+function createProject() {
+  const name = document.getElementById("newProjectName").value.trim();
+  if (!name) return;
+  const id = "proj_" + Date.now();
+  projects.push({ id, name, created: new Date().toISOString() });
+  saveProjects();
+  closeNewProject();
+  switchProject(id);
+}
+
+// ── DASHBOARD TOGGLE ──────────────────────────────────────
+
+function toggleDashboard() {
+  dashOpen = !dashOpen;
+  document.getElementById("dashPanel").classList.toggle("open", dashOpen);
+  document.getElementById("dashBtn").textContent = dashOpen ? "✕ Close Graph" : "📋 Decision Graph";
+  if (dashOpen) refreshDashboard();
+}
+
+function openDashboardToTimeline() {
+  if (!dashOpen) toggleDashboard();
+  switchTab("timeline", document.querySelectorAll(".tab")[1]);
+  renderTimeline();
+}
+
+// ── TABS ─────────────────────────────────────────────────
+
+function switchTab(name, el) {
+  activeTab = name;
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  el.classList.add("active");
+  document.getElementById("tab-decisions").style.display = name === "decisions" ? "block" : "none";
+  document.getElementById("tab-timeline").style.display = name === "timeline" ? "block" : "none";
+  document.getElementById("tab-conflicts").style.display = name === "conflicts" ? "block" : "none";
+  if (name === "timeline") renderTimeline();
+}
+
+// ── RENDER DECISIONS ──────────────────────────────────────
+
+function renderDecisions(decisions) {
+  const list = document.getElementById("decisionsList");
+  const empty = document.getElementById("decisionsEmpty");
+  const projectDecisions = decisions.filter(d =>
+    d.status === "active" && (d.project || "default") === currentProject
+  );
+
+  if (projectDecisions.length === 0) {
+    empty.style.display = "block"; list.innerHTML = ""; return;
+  }
+  empty.style.display = "none";
+
+  list.innerHTML = projectDecisions.map(d => {
+    const conf = Math.round((d.confidence || 0.8) * 100);
+    const date = new Date(d.timestamp).toLocaleDateString();
+    return `
+      <div class="decision-card" onclick="openDashboardToTimeline()">
+        <div class="card-slot">${d.slot}</div>
+        <div class="card-decision">${d.decision}</div>
+        <div class="card-meta">
+          <span>Why:</span> ${d.reasoning || "—"}<br>
+          ${d.alternatives?.length ? `<span>vs:</span> ${d.alternatives.join(", ")}<br>` : ""}
+          <span>By:</span> ${(d.contributors||[]).join(", ")||"—"} · ${date}
+        </div>
+        <div class="confidence-bar">
+          <div class="confidence-fill" style="width:${conf}%"></div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+// ── RENDER TIMELINE ───────────────────────────────────────
+
+function renderTimeline() {
+  const container = document.getElementById("timelineList");
+  const projectDecisions = allDecisions.filter(d => (d.project || "default") === currentProject);
+  const projectConflicts = allConflicts.filter(c => (c.project || "default") === currentProject);
+
+  const events = [];
+
+  projectDecisions.forEach(d => {
+    events.push({
+      date: d.timestamp,
+      type: d.status === "overridden" ? "overridden" : "decision",
+      text: d.status === "overridden" ? `Overridden: "${d.decision}"` : `Decided: "${d.decision}"`,
+      detail: d.reasoning || "",
+      slot: d.slot,
+    });
+  });
+
+  projectConflicts.forEach(c => {
+    // Show interception event
+    events.push({
+      date: c.timestamp,
+      type: "intercepted",
+      text: `🚨 Intercepted: "${c.position_b?.decision || "unknown"}"`,
+      detail: `Conflicted with: "${c.position_a?.decision || "unknown"}"`,
+      slot: c.slot,
+    });
+
+    // If resolved — show resolution event too
+    if (c.status === "resolved" && c.resolved_by) {
+      events.push({
+        date: c.timestamp,
+        type: c.resolved_action === "override" ? "overridden" : "reconfirmed",
+        text: c.resolved_action === "override"
+          ? `✅ Overridden by ${c.resolved_by}`
+          : `✅ Reconfirmed by ${c.resolved_by}`,
+        detail: c.resolve_reason || "",
+        slot: c.slot,
+      });
+    }
+  });
+
+  events.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  if (events.length === 0) {
+    container.innerHTML = '<div class="empty-state">No timeline data yet for this project.</div>';
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="timeline">
+      ${events.map(e => `
+        <div class="timeline-event">
+          <div class="timeline-dot ${e.type}"></div>
+          <div class="timeline-date">${new Date(e.date).toLocaleDateString()} ${new Date(e.date).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}</div>
+          <div class="timeline-action ${e.type}">${e.text}</div>
+          ${e.detail ? `<div class="timeline-detail">${e.detail}</div>` : ""}
+          ${e.slot ? `<div class="timeline-detail" style="color:#667eea;margin-top:2px">slot: ${e.slot}</div>` : ""}
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+// ── RENDER CONFLICTS ──────────────────────────────────────
+
+function renderConflicts(conflicts) {
+  const list = document.getElementById("conflictsList");
+  const empty = document.getElementById("conflictsEmpty");
+  const projectConflicts = conflicts.filter(c => (c.project || "default") === currentProject);
+
+  if (projectConflicts.length === 0) {
+    empty.style.display = "block"; list.innerHTML = ""; return;
+  }
+  empty.style.display = "none";
+
+  list.innerHTML = projectConflicts.map(c => `
+    <div class="conflict-item">
+      <div class="card-slot" style="background:#3a1a1a;color:#e74c3c">${c.slot}</div>
+      <div class="card-decision" style="color:#e74c3c;margin:6px 0">⚠️ Unresolved Conflict</div>
+      <div class="card-meta">
+        <span>A:</span> ${c.position_a?.decision || "—"}<br>
+        <span>B:</span> ${c.position_b?.decision || "—"}<br>
+        <span>Engineers:</span> ${c.position_a?.engineer||"—"} vs ${c.position_b?.engineer||"—"}
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-danger" style="font-size:0.75em;padding:5px 10px"
+          onclick="resolveConflict('override','${c.id}',this)">Override A → Keep B</button>
+        <button class="btn btn-success" style="font-size:0.75em;padding:5px 10px"
+          onclick="resolveConflict('reconfirm','${c.id}',this)">Keep A → Reject B</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+// ── STATS ─────────────────────────────────────────────────
+
+function updateStats(decisions, conflicts) {
+  const pd = decisions.filter(d => d.status === "active" && (d.project||"default") === currentProject);
+  const pc = conflicts.filter(c => (c.project||"default") === currentProject);
+  document.getElementById("statDecisions").textContent = pd.length;
+  document.getElementById("statConflicts").textContent = pc.length;
+  const avg = pd.length
+    ? Math.round(pd.reduce((s,d) => s+(d.confidence||0.8),0)/pd.length*100)+"%"
+    : "—";
+  document.getElementById("statConfidence").textContent = avg;
+}
+
+// ── REFRESH ───────────────────────────────────────────────
+
+async function refreshDashboard() {
+  try {
+    const [dec, con] = await Promise.all([
+      fetch(`${API}/decisions`).then(r=>r.json()),
+      fetch(`${API}/conflicts`).then(r=>r.json()),
+    ]);
+    allDecisions = dec;
+    allConflicts = con;
+    updateStats(dec, con);
+    renderProjectList();
+    
+      renderDecisions(dec);
+      renderConflicts(con);
+      if (activeTab === "timeline") renderTimeline();
+    
+  } catch {}
+}
+
+// ── IMPORT ────────────────────────────────────────────────
+
+function openImport() { document.getElementById("importModal").classList.add("open"); }
+function closeImport() { document.getElementById("importModal").classList.remove("open"); }
+
+async function runImport() {
+  const text = document.getElementById("importText").value.trim();
+  if (!text) return;
+  closeImport();
+  addMsg("guardian", "🔍 Analysing chat history for decisions...");
+  showShield();
+  try {
+    const res = await fetch(`${API}/analyse`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, project: currentProject }),
+    });
+    const data = await res.json();
+    removeShield();
+    if (data.decisions?.length) {
+      addMsg("guardian", `✅ Found ${data.decisions.length} decision(s) from chat history.`);
+      document.getElementById("importText").value = "";
+      refreshDashboard();
+    } else {
+      addMsg("guardian", "No engineering decisions found in that history.");
+    }
+  } catch {
+    removeShield();
+    addMsg("guardian", "Error analysing history.");
+  }
+}
+
+// ── CHAT ─────────────────────────────────────────────────
+
+function handleKey(e) {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+async function sendMessage() {
+  const input = document.getElementById("chatInput");
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = "";
+  addMsg("user", msg);
+  showShield();
+
+  try {
+    const res = await fetch(`${API}/chat`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: msg, project: currentProject }),
+    });
+    const data = await res.json();
+    removeShield();
+
+    if (data.type === "question") {
+      addMsg("guardian", "🛡️ " + data.answer);
+    } else if (data.type === "conflict") {
+      addInterceptionAlert(data);
+      refreshDashboard();
+      setTimeout(() => openDashboardToTimeline(), 800);
+    } else if (data.type === "decision") {
+      addDecisionCaptured(data.decision);
+      refreshDashboard();
+    } else {
+      addMsg("guardian", "💬 No engineering decision detected in that message.");
+    }
+  } catch {
+    removeShield();
+    addMsg("guardian", "Error connecting to Guardian server.");
+  }
+}
+
+// ── MESSAGE HELPERS ───────────────────────────────────────
+
+function addMsg(type, text) {
+  const area = document.getElementById("chatArea");
+  const div = document.createElement("div");
+  div.className = `chat-msg ${type}`;
+  div.textContent = text;
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function addDecisionCaptured(decision) {
+  const area = document.getElementById("chatArea");
+  const div = document.createElement("div");
+  div.className = "chat-msg decision-captured";
+  div.innerHTML = `<span style="color:#1abc9c;font-weight:700">✓ Decision captured</span><br><span style="color:#aaa;font-size:0.92em">"${decision}"</span><br><span style="color:#555;font-size:0.78em">Stored in decision memory · No conflicts found</span>`;
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function addInterceptionAlert(data) {
+  const area = document.getElementById("chatArea");
+  const div = document.createElement("div");
+  div.className = "interception-alert";
+  div.innerHTML = `
+    <div class="alert-inner">
+      <div class="alert-header">
+        <div class="shield-icon">🛡</div>
+        <div class="alert-title-text">CONTRADICTION INTERCEPTED</div>
+        <div class="alert-severity">${data.severity || "critical"}</div>
+      </div>
+      <div class="alert-decisions">
+        <div class="alert-decision-box past">
+          <div class="alert-decision-label">Past Decision</div>
+          <div class="alert-decision-text">${data.pastDecision}</div>
+        </div>
+        <div class="alert-vs">⚡</div>
+        <div class="alert-decision-box proposed">
+          <div class="alert-decision-label">New Proposal</div>
+          <div class="alert-decision-text">${data.newProposal}</div>
+        </div>
+      </div>
+      <div class="alert-reason">💡 ${data.explanation}</div>
+      <div class="alert-actions">
+        <button class="btn btn-danger" onclick="resolveConflict('override','${data.conflictId}',this)">Override</button>
+        <button class="btn btn-success" onclick="resolveConflict('reconfirm','${data.conflictId}',this)">Reconfirm Original</button>
+      </div>
+    </div>
+  `;
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+let shieldEl = null;
+function showShield() {
+  const area = document.getElementById("chatArea");
+  shieldEl = document.createElement("div");
+  shieldEl.className = "shield-processing";
+  shieldEl.innerHTML = `<div class="shield-spin"></div> Guardian is reasoning...`;
+  area.appendChild(shieldEl);
+  area.scrollTop = area.scrollHeight;
+}
+function removeShield() {
+  if (shieldEl) { shieldEl.remove(); shieldEl = null; }
+}
+
+async function resolveConflict(action, conflictId, btn) {
+  if (action === "override") {
+    // Open the override modal instead of prompt()
+    openOverrideModal(conflictId, btn);
+    return;
+  }
+
+  // Reconfirm — no friction needed, one click
+  btn.parentElement.querySelectorAll("button").forEach(b => b.disabled = true);
+  try {
+    await fetch(`${API}/resolve`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, conflictId, engineer: process?.env?.CONTRIBUTOR_NAME || "Engineer", reason: "Reconfirmed original decision" }),
+    });
+    addMsg("guardian", "✅ Original decision reconfirmed. Proposal rejected.");
+    refreshDashboard();
+  } catch {
+    addMsg("guardian", "Error resolving conflict.");
+  }
+}
+
+// ── INIT ─────────────────────────────────────────────────
+const lastProject = localStorage.getItem("rg_last_project");
+if (lastProject && projects.find(p => p.id === lastProject)) {
+  currentProject = lastProject;
+}
+const initialProject = projects.find(p => p.id === currentProject);
+if (initialProject) {
+  document.getElementById("activeProjectBadge").textContent = `📁 ${initialProject.name}`;
+}
+renderProjectList();
+refreshDashboard();
+setInterval(refreshDashboard, 5000);
+
+// Set initial badge
+const defaultProject = projects.find(p => p.id === "default");
+if (defaultProject) {
+  document.getElementById("activeProjectBadge").textContent = `📁 ${defaultProject.name}`;
+}
+</script>
+</body>
+</html>
